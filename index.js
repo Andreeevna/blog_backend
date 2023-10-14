@@ -5,6 +5,7 @@ import { registerValidator } from './validations/auth.js'
 
 import { getMe, login, register } from './controllers/UserController.js'
 import checkAuth from './utils/checkAuth.js'
+import { loginValidator } from './validations/login.js'
 
 mongoose
 	.connect(
@@ -23,7 +24,7 @@ app.get('/', (req, res) => {
 	res.send('Hello, world')
 })
 
-app.post('/auth/login', login)
+app.post('/auth/login', loginValidator, login)
 
 app.post('/auth/register', registerValidator, register)
 
