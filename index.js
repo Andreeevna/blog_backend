@@ -1,11 +1,13 @@
 import express from 'express'
 import mongoose from 'mongoose'
+import multer from 'multer'
 
 import { registerValidator } from './validations/auth.js'
 
 import * as PostController from './controllers/PostController.js'
 import { getMe, login, register } from './controllers/UserController.js'
 import checkAuth from './utils/checkAuth.js'
+import handleValidationErr from './utils/handleValidationErr.js'
 import { loginValidator } from './validations/login.js'
 import { postCreateValidator } from './validations/post.js'
 
@@ -17,26 +19,58 @@ mongoose
 		console.log('db OK')
 	})
 	.catch(err => console.log('db err', err))
-
 const app = express()
 
+const storage = multer.diskStorage({
+	destination: (_, __, cb) => {
+		// if (!fs.existsSync('uploads')) {
+		// 	fs.mkdirSync('uploads')
+		// }
+		cb(null, 'uploads')
+	},
+	filename: (_, file, cb) => {
+		cb(null, file.originalname)
+	},
+})
+
+const upload = multer({ storage })
+
 app.use(express.json())
+app.use('/uploads', express.static('uploads'))
 
 app.get('/', (req, res) => {
 	res.send('Hello, world')
 })
 
-app.post('/auth/login', loginValidator, login)
+app.post('/auth/login', loginValidator, handleValidationErr, login)
 
-app.post('/auth/register', registerValidator, register)
+app.post('/auth/register', registerValidator, handleValidationErr, register)
+
+app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
+	res.json({
+		url: `/uploads/${req.file.originalname}`,
+	})
+})
 
 app.get('/auth/me', checkAuth, getMe)
 
 app.get('/posts', PostController.getAll)
 app.get('/posts/:id', PostController.getOne)
-app.post('/posts', checkAuth, postCreateValidator, PostController.create)
+app.post(
+	'/posts',
+	checkAuth,
+	postCreateValidator,
+	handleValidationErr,
+	PostController.create
+)
 app.delete('/posts/:id', checkAuth, PostController.remove)
-app.patch('/posts/:id', checkAuth, PostController.update)
+app.patch(
+	'/posts/:id',
+	checkAuth,
+	postCreateValidator,
+	handleValidationErr,
+	PostController.update
+)
 
 app.listen('4444', err => {
 	if (err) {
