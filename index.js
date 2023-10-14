@@ -7,6 +7,7 @@ import mongoose from 'mongoose'
 import { registerValidator } from './validations/auth.js'
 
 import UserModel from './models/User.js'
+import checkAuth from './utils/checkAuth.js'
 
 mongoose
 	.connect(
@@ -113,6 +114,14 @@ app.post('/auth/register', registerValidator, async (req, res) => {
 			message: 'Не удалось зарегистрироваться',
 		})
 	}
+})
+
+app.get('/auth/me', checkAuth, (req, res) => {
+	try {
+		res.json({
+			success: true,
+		})
+	} catch (error) {}
 })
 
 app.listen('4444', err => {
