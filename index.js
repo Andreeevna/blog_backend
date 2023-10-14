@@ -3,9 +3,11 @@ import mongoose from 'mongoose'
 
 import { registerValidator } from './validations/auth.js'
 
+import * as PostController from './controllers/PostController.js'
 import { getMe, login, register } from './controllers/UserController.js'
 import checkAuth from './utils/checkAuth.js'
 import { loginValidator } from './validations/login.js'
+import { postCreateValidator } from './validations/post.js'
 
 mongoose
 	.connect(
@@ -29,6 +31,12 @@ app.post('/auth/login', loginValidator, login)
 app.post('/auth/register', registerValidator, register)
 
 app.get('/auth/me', checkAuth, getMe)
+
+app.get('/posts', PostController.getAll)
+app.get('/posts/:id', PostController.getOne)
+app.post('/posts', checkAuth, postCreateValidator, PostController.create)
+app.delete('/posts/:id', checkAuth, PostController.remove)
+app.patch('/posts/:id', checkAuth, PostController.update)
 
 app.listen('4444', err => {
 	if (err) {
